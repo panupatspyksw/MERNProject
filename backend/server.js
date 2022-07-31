@@ -4,20 +4,28 @@ const PORT = process.env.PORT || 5000;
 const { errorHandler } = require('../backend/middleware/errorMiddleware');
 const app = express();
 const connectDB = require('./config/db');
-var colors = require('colors');
-
-// Connect to database
+const path = require('path');
 connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Welcome to the Support Desk API' });
-});
-
 app.use('/api/users', require('./routes/UserRoutes'));
 app.use('/api/tickets', require('./routes/TicketRoutes'));
+
+// Serve Frontend
+if (process.env.NODE_ENV === 'production') {
+  // Set build folder as statio
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+  app.get('*', (req, res) =>
+    res.sendFile(__dirname, '../', 'frontend', 'build', 'index.html')
+  );
+} else {
+  app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Welcome to the Support Desk API' });
+  });
+}
 
 app.use(errorHandler);
 
